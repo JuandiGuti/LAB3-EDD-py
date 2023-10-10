@@ -1,12 +1,14 @@
 from modelos.persona import Person
 from arbol import ArbolBinario
 from letters_assign import search
+from LZWCompresor import LZWCompression
 import coding_decoding
 import json
 import csv
 
 
 jsonArbol = ArbolBinario()
+compression = LZWCompression()
 
 menu = ""
 
@@ -31,9 +33,9 @@ while(menu != None):
             reader = csv.reader(archivo, delimiter=";")
             for fila in reader:
                 jsonPersona = Person.from_json(str(fila[1]))
+                jsonPersona.letter = search(jsonPersona)
                 if fila[0] == "INSERT":
                     #ponerle sus cartas de recomendacion
-                    jsonPersona.letter = search(jsonPersona)
                     jsonArbol.insertar(jsonPersona)
                     
                 elif fila[0] == "PATCH":
@@ -44,7 +46,8 @@ while(menu != None):
                         jsonPersonaPatch.datebirth = jsonPersona.datebirth
                         jsonPersonaPatch.address = jsonPersona.address
                         jsonPersonaPatch.companies = jsonPersona.companies
-                        
+                        jsonPersonaPatch.letter = jsonPersona.letter
+
                         jsonArbol.eliminar(jsonPersona)
                         jsonArbol.insertar(jsonPersonaPatch)
                     else:
@@ -79,11 +82,14 @@ while(menu != None):
         i =0
         while i < len(lista):
             print("Nombre:" + lista[i].name)
+            
             print("Dpi:" + lista[i].dpi)
             print("Fecha de nacimiento:" + lista[i].datebirth)
             print("Direccion:" + lista[i].address)
             print("Companias:" + str(lista[i].companies))
+            print('\n')
             print("Cartas:" + str(lista[i].letter))
+            print('\n')
             print("No. de Cartas:" + str(len(lista[i].letter)))
             print('\n')
             i += 1
@@ -192,12 +198,22 @@ while(menu != None):
             print("No se pudo decodificar...")
             
     elif(menu == "10"):
-        print("Se han comprimido las cartas!")
         dpi = input("Ingrese el dpi del cual quiere comprimir las cartas \n")
+        lista = jsonArbol.buscar_por_dpi(dpi)
+        i = 0
+        while i < len(lista[0].letter):
+            lista[0].letter[i] = compression.compress(lista[0].letter[i])
+            i += 1
+        print("Se han comprimido las cartas!")
         
     elif(menu == "11"):
-        print("Se han descomprimido las cartas!")
         dpi = input("Ingrese el dpi del cual quiere descomprimir las cartas \n")
+        lista = jsonArbol.buscar_por_dpi(dpi)
+        i = 0
+        while i < len(lista[0].letter):
+            lista[0].letter[i] = compression.decompress(lista[0].letter[i])
+            i += 1
+        print("Se han descomprimido las cartas!")
         
     elif(menu == "12"):
         menu = None
